@@ -52,6 +52,52 @@ export default function SafeLensScreen() {
     setScreen('scanning');
   };
 
+  const handleSearch = async () => {
+    if (!inputValue.trim()) return;
+    
+    try {
+      setScreen('scanning');
+      setLogs([]);
+      console.log("🚀")
+      
+      const response = await fetch('http://localhost:3000/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: inputValue,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      console.log("🚀 ~ handleSearch ~ data:", data)
+      
+      setResultData(data);
+      
+      // Simulate loading logs
+      let delay = 0;
+      LOADING_LOGS.forEach((l, i) => {
+        delay += 500 + Math.random() * 300;
+        setTimeout(() => {
+          setLogs((p) => [...p, l]);
+          if (i === LOADING_LOGS.length - 1) {
+            setTimeout(() => setScreen('result'), 700);
+          }
+        }, delay);
+      });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      // You can add error handling UI here
+      setScreen('home');
+    }
+  };
+
   const reset = () => {
     setScreen('home');
     setInputValue('');
@@ -61,6 +107,7 @@ export default function SafeLensScreen() {
     setShowPlusMenu(false);
   };
 
+  // console.log('handleSearch called',{handleSearch});
   return (
     <SafeAreaView style={styles.container}>
       {screen === 'home' && (
@@ -76,7 +123,8 @@ export default function SafeLensScreen() {
             setShowClipboardToast(false);
           }}
           onScenarioPress={startAnalysis}
-          onSearch={() => startAnalysis('safe')}
+          onSearch={handleSearch}
+          // onSearch={() => startAnalysis('safe')}
         />
       )}
 

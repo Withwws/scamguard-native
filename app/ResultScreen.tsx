@@ -5,10 +5,15 @@ import { styles } from './styles';
 
 interface ResultData {
   type: string;
-  verdict: string;
+  originalInput: string;
+  url: string;
   riskScore: number;
-  category: string;
+  decision: string;
+  features: number[];
+  htmlLength: number;
+  verdict: string;
   impersonating: string;
+  category: string;
   serverLoc: string;
   evidence: Array<{
     icon: (props: any) => React.ReactElement;
@@ -27,7 +32,21 @@ interface ResultScreenProps {
 }
 
 export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
-  const containerBgStyle = resultData.type === 'SAFE' ? styles.safeBg : styles.dangerBg;
+  const containerBgStyle = resultData.decision === 'ALLOW' ? styles.safeBg : styles.dangerBg;
+  // resultData.verdict = resultData.decision === 'ALLOW' ? 'Official SSL certificate and domain verified.' : styles.dangerBg;
+
+  switch (resultData.decision) {
+  case 'WARN':
+    resultData.verdict = 'Suspicious site with potential risks detected.';
+    break;
+
+  case 'BLOCK':
+    resultData.verdict = 'This site is flagged for malicious content or security violations.';
+    break;
+
+  default:
+    resultData.verdict = 'Official SSL certificate and domain verified.';
+}
 
   return (
     <View style={styles.resultContainer}>
@@ -35,16 +54,16 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
         <View style={[styles.resultHeader, containerBgStyle]}>
           <View style={styles.dangerIconContainer}>
             <MaterialCommunityIcons
-              name={resultData.type === 'SAFE' ? 'shield-check' : 'alert-outline'}
+              name={resultData.decision === 'ALLOW' ? 'shield-check' : 'alert-outline'}
               size={48}
               color="#fff"
             />
           </View>
           <Text style={styles.resultTitle}>
-            {resultData.type === 'SAFE' ? 'Link is Safe' : 'Danger Detected'}
+            {resultData.decision === 'ALLOW' ? 'Link is Safe' : 'Danger Detected'}
           </Text>
           <Text style={styles.resultVerdict}>{resultData.verdict}</Text>
-          {resultData.type !== 'SAFE' && (
+          {resultData.decision !== 'ALLOW' && (
             <View style={styles.riskBadge}>
               <MaterialCommunityIcons name="alert" size={14} color="#fff" />
               <Text style={styles.riskBadgeText}>Risk Score {resultData.riskScore}%</Text>
@@ -61,8 +80,8 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
             <View style={styles.summaryContent}>
               <Text style={styles.summaryCategory}>{resultData.category}</Text>
               <View style={styles.impersonatingRow}>
-                <Text style={styles.impersonatingLabel}>Impersonating: </Text>
-                <Text style={styles.impersonatingValue}>{resultData.impersonating}</Text>
+                {/* <Text style={styles.impersonatingLabel}>Impersonating: </Text> */}
+                <Text style={styles.impersonatingValue}>{resultData.url}</Text>
               </View>
               <View style={styles.locationRow}>
                 <MaterialCommunityIcons name="map-marker" size={12} color="#94a3b8" />
@@ -77,7 +96,7 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
             <Text style={styles.sectionLabel}>EVIDENCE DETAILS</Text>
             <Text style={styles.aiDetectedBadge}>AI Detected</Text>
           </View>
-          {resultData.evidence.map((e: any, idx: number) => (
+          {/* {resultData.evidence.map((e: any, idx: number) => (
             <View key={idx} style={styles.evidenceItem}>
               <View style={styles.evidenceIconBox}>{e.icon({ size: 18, color: '#64748b' })}</View>
               <View style={styles.evidenceContent}>
@@ -85,10 +104,10 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
                 <Text style={styles.evidenceDesc}>{e.desc}</Text>
               </View>
             </View>
-          ))}
+          ))} */}
         </View>
 
-        {resultData.type !== 'SAFE' && resultData.actionGuide && (
+        {resultData.decision !== 'ALLOW' && resultData.actionGuide && (
           <View style={styles.guideCard}>
             {resultData.actionGuide.map((a: any, i: number) => (
               <View key={i} style={styles.guideItem}>
@@ -111,7 +130,7 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnDanger}>
           <Text style={styles.btnTextWhite}>
-            {resultData.type !== 'SAFE' ? 'Block & Report' : 'Open Browser'}
+            {resultData.decision !== 'ALLOW' ? 'Block & Report' : 'Open Browser'}
           </Text>
         </TouchableOpacity>
       </View>

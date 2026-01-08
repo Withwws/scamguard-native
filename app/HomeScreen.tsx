@@ -112,7 +112,7 @@ export function HomeScreen({
       )}
 
       {/* Scenario Section */}
-      <Text style={styles.scenarioHeader}>SELECT TEST SCENARIO</Text>
+      {/* <Text style={styles.scenarioHeader}>SELECT TEST SCENARIO</Text>
       
       <TouchableOpacity 
         style={[styles.scenarioCard, styles.redBorder]}
@@ -157,7 +157,7 @@ export function HomeScreen({
           <Text style={styles.scenarioSubtitle}>Legitimate Site</Text>
         </View>
         <MaterialCommunityIcons name="chevron-right" size={20} color="#cbd5e1" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScrollView>
   );
 }
