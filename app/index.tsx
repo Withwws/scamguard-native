@@ -1,3 +1,4 @@
+import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,12 +10,13 @@ import { ScanningScreen } from './ScanningScreen';
 import { styles } from './styles';
 
 export default function SafeLensScreen() {
-  const { scannedQR } = useLocalSearchParams();
+  const { scannedQR, qrLink } = useLocalSearchParams();
   const [screen, setScreen] = useState<'home' | 'scanning' | 'result'>('home');
   const [inputValue, setInputValue] = useState('');
   const [logs, setLogs] = useState<string[]>([]);
   const [resultData, setResultData] = useState<any>(null);
   const [showClipboardToast, setShowClipboardToast] = useState(false);
+  const [clipboardText, setClipboardText] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
 
   useEffect(() => {
@@ -23,6 +25,13 @@ export default function SafeLensScreen() {
       setShowPlusMenu(false);
     }
   }, [scannedQR]);
+
+  useEffect(() => {
+    if (qrLink) {
+      setInputValue(qrLink as string);
+      setShowPlusMenu(false);
+    }
+  }, [qrLink]);
 
   useEffect(() => {
     if (screen === 'scanning') {
@@ -40,8 +49,26 @@ export default function SafeLensScreen() {
 
   useEffect(() => {
     if (screen === 'home') {
-      const timer = setTimeout(() => setShowClipboardToast(true), 1500);
-      return () => clearTimeout(timer);
+      setShowClipboardToast(false);
+      
+      const checkClipboard = async () => {
+        try {
+          const text = await Clipboard.getStringAsync();
+          if (text && text.trim().length > 0) {
+            setClipboardText(text.trim());
+            setTimeout(() => setShowClipboardToast(true), 500);
+          }
+        } catch (error) {
+          console.log('Failed to read clipboard:', error);
+        }
+      };
+      
+      // Check immediately
+      checkClipboard();
+      
+      // Then check every 5 seconds
+      const interval = setInterval(() => checkClipboard(), 5000);
+      return () => clearInterval(interval);
     }
   }, [screen]);
 
@@ -81,16 +108,16 @@ export default function SafeLensScreen() {
       setResultData(data);
       
       // Simulate loading logs
-      let delay = 0;
-      LOADING_LOGS.forEach((l, i) => {
-        delay += 500 + Math.random() * 300;
-        setTimeout(() => {
-          setLogs((p) => [...p, l]);
-          if (i === LOADING_LOGS.length - 1) {
-            setTimeout(() => setScreen('result'), 700);
-          }
-        }, delay);
-      });
+      // let delay = 0;
+      // LOADING_LOGS.forEach((l, i) => {
+      //   delay += 500 + Math.random() * 300;
+      //   setTimeout(() => {
+      //     setLogs((p) => [...p, l]);
+      //     if (i === LOADING_LOGS.length - 1) {
+      //       setTimeout(() => setScreen('result'), 700);
+      //     }
+      //   }, delay);
+      // });
     } catch (error) {
       console.error('Analysis error:', error);
       // You can add error handling UI here
@@ -118,9 +145,10 @@ export default function SafeLensScreen() {
           onTogglePlusMenu={() => setShowPlusMenu(!showPlusMenu)}
           onInputFocus={() => setShowPlusMenu(false)}
           showClipboardToast={showClipboardToast}
+          clipboardText={clipboardText}
           onClipboardScan={() => {
-            setInputValue('https://bit.ly/prize-claim');
-            setShowClipboardToast(false);
+            setInputValue(clipboardText);
+            // setShowClipboardToast(false);
           }}
           onScenarioPress={startAnalysis}
           onSearch={handleSearch}

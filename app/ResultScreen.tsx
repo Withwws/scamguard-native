@@ -8,7 +8,9 @@ interface ResultData {
   originalInput: string;
   url: string;
   riskScore: number;
+  finalRiskScore: number;
   decision: string;
+  finalDecision: string;
   features: number[];
   htmlLength: number;
   verdict: string;
@@ -24,6 +26,19 @@ interface ResultData {
     title: string;
     text: string;
   }>;
+  llmAnalysis: {
+    success: boolean;
+    analysis: {
+      phishingType: string;
+      targetService: string;
+      techniques: string[];
+      evidence: Array<{
+        type: string;
+        description: string;
+      }>;
+    };
+    recommendations: string[];
+  };
 }
 
 interface ResultScreenProps {
@@ -32,10 +47,10 @@ interface ResultScreenProps {
 }
 
 export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
-  const containerBgStyle = resultData.decision === 'ALLOW' ? styles.safeBg : styles.dangerBg;
+  const containerBgStyle = resultData.finalDecision === 'ALLOW' ? styles.safeBg : styles.dangerBg;
   // resultData.verdict = resultData.decision === 'ALLOW' ? 'Official SSL certificate and domain verified.' : styles.dangerBg;
 
-  switch (resultData.decision) {
+  switch (resultData.finalDecision) {
   case 'WARN':
     resultData.verdict = 'Suspicious site with potential risks detected.';
     break;
@@ -45,7 +60,7 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
     break;
 
   default:
-    resultData.verdict = 'Official SSL certificate and domain verified.';
+    resultData.verdict = 'Verified safe: No security threats or malicious patterns detected.';
 }
 
   return (
@@ -54,69 +69,70 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
         <View style={[styles.resultHeader, containerBgStyle]}>
           <View style={styles.dangerIconContainer}>
             <MaterialCommunityIcons
-              name={resultData.decision === 'ALLOW' ? 'shield-check' : 'alert-outline'}
+              name={resultData.finalDecision === 'ALLOW' ? 'shield-check' : 'alert-outline'}
               size={48}
               color="#fff"
             />
           </View>
           <Text style={styles.resultTitle}>
-            {resultData.decision === 'ALLOW' ? 'Link is Safe' : 'Danger Detected'}
+            {resultData.finalDecision === 'ALLOW' ? 'Link is Safe' : 'Danger Detected'}
           </Text>
           <Text style={styles.resultVerdict}>{resultData.verdict}</Text>
-          {resultData.decision !== 'ALLOW' && (
+          {resultData.finalDecision !== 'ALLOW' && (
             <View style={styles.riskBadge}>
               <MaterialCommunityIcons name="alert" size={14} color="#fff" />
-              <Text style={styles.riskBadgeText}>Risk Score {resultData.riskScore}%</Text>
+              <Text style={styles.riskBadgeText}>Risk Score {resultData.finalRiskScore}%</Text>
             </View>
           )}
         </View>
 
         <View style={styles.summaryCard}>
-          <Text style={styles.sectionLabel}>AI ANALYSIS SUMMARY</Text>
+          <Text style={styles.sectionLabelHeader}>AI ANALYSIS SUMMARY</Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryIconBox}>
               <MaterialCommunityIcons name="credit-card" size={20} color="#dc2626" />
             </View>
             <View style={styles.summaryContent}>
-              <Text style={styles.summaryCategory}>{resultData.category}</Text>
+              {/* <Text style={styles.summaryCategory}>555</Text> */}
+                <Text style={styles.summaryCategory}>{resultData.originalInput}</Text>
               <View style={styles.impersonatingRow}>
-                {/* <Text style={styles.impersonatingLabel}>Impersonating: </Text> */}
-                <Text style={styles.impersonatingValue}>{resultData.url}</Text>
-              </View>
-              <View style={styles.locationRow}>
-                <MaterialCommunityIcons name="map-marker" size={12} color="#94a3b8" />
-                <Text style={styles.locationText}>Location: {resultData.serverLoc}</Text>
+                <Text style={styles.impersonatingLabel}>type: {resultData.type}</Text>
               </View>
             </View>
           </View>
         </View>
 
+        {resultData.finalDecision !== 'ALLOW'&& (
         <View style={styles.evidenceCard}>
           <View style={styles.evidenceHeader}>
             <Text style={styles.sectionLabel}>EVIDENCE DETAILS</Text>
             <Text style={styles.aiDetectedBadge}>AI Detected</Text>
           </View>
-          {/* {resultData.evidence.map((e: any, idx: number) => (
+          {resultData.llmAnalysis?.analysis?.evidence?.map((e: any, idx: number) => (
             <View key={idx} style={styles.evidenceItem}>
-              <View style={styles.evidenceIconBox}>{e.icon({ size: 18, color: '#64748b' })}</View>
+              <View style={styles.evidenceIconBox}>
+                <MaterialCommunityIcons name="alert-circle" size={32} color="#ef4444" />
+              </View>
               <View style={styles.evidenceContent}>
-                <Text style={styles.evidenceTitle}>{e.title}</Text>
-                <Text style={styles.evidenceDesc}>{e.desc}</Text>
+                <Text style={styles.evidenceTitle}>{e.type}</Text>
+                <Text style={styles.evidenceDesc}>{e.description}</Text>
               </View>
             </View>
-          ))} */}
-        </View>
+          ))}
+        </View>)}
 
-        {resultData.decision !== 'ALLOW' && resultData.actionGuide && (
+        {resultData.finalDecision !== 'ALLOW' && resultData.llmAnalysis?.recommendations && resultData.llmAnalysis.recommendations.length > 0 && (
           <View style={styles.guideCard}>
-            {resultData.actionGuide.map((a: any, i: number) => (
+            <View style={styles.evidenceHeader}>
+            <Text style={styles.sectionLabel}>RECOMMENDATIONS</Text>
+          </View>
+            {resultData.llmAnalysis.recommendations.map((rec: string, i: number) => (
               <View key={i} style={styles.guideItem}>
                 <View style={styles.guideNumber}>
                   <Text style={styles.guideNumberText}>{i + 1}</Text>
                 </View>
                 <View style={styles.guideContent}>
-                  <Text style={styles.guideTitle}>{a.title}</Text>
-                  <Text style={styles.guideDesc}>{a.text}</Text>
+                  <Text style={styles.guideDesc}>{rec}</Text>
                 </View>
               </View>
             ))}
@@ -128,9 +144,12 @@ export function ResultScreen({ resultData, onReset }: ResultScreenProps) {
         <TouchableOpacity onPress={onReset} style={styles.btnSecondary}>
           <Text style={styles.btnText}>Exit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.btnDanger}>
+        <TouchableOpacity style={styles.btnDisable}
+        disabled={true}>
           <Text style={styles.btnTextWhite}>
-            {resultData.decision !== 'ALLOW' ? 'Block & Report' : 'Open Browser'}
+            {/* {resultData.finalDecision !== 'ALLOW' ? 'coming soon' : 'Open Browser'} */}
+            coming soon
+            {/* {resultData.finalDecision !== 'ALLOW' ? 'Block & Report' : 'Open Browser'} */}
           </Text>
         </TouchableOpacity>
       </View>

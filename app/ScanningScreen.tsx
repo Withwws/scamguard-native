@@ -19,14 +19,14 @@ export function ScanningScreen({ logs }: ScanningScreenProps) {
       <Text style={styles.scanTitle}>Accessing via AI Sandbox</Text>
       <Text style={styles.scanSubtitle}>AI is interacting with the link in a safe virtual environment.</Text>
 
-      <ScrollView style={styles.logBox}>
+      {/* <ScrollView style={styles.logBox}>
         {logs.map((l, i) => (
           <View key={i} style={styles.logItem}>
             <View style={styles.logDot} />
             <Text style={styles.logText}>{l}</Text>
           </View>
         ))}
-      </ScrollView>
+      </ScrollView> */}
     </View>
   );
 }

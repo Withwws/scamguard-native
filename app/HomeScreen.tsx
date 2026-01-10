@@ -1,4 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaskedView from '@react-native-masked-view/masked-view';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, } from "expo-router";
 import React from 'react';
 import {
@@ -17,6 +19,7 @@ interface HomeScreenProps {
   onTogglePlusMenu: () => void;
   onInputFocus: () => void;
   showClipboardToast: boolean;
+  clipboardText: string;
   onClipboardScan: () => void;
   onScenarioPress: (scenario: 'financial' | 'malware' | 'safe') => void;
   onSearch: () => void;
@@ -29,6 +32,7 @@ export function HomeScreen({
   onTogglePlusMenu,
   onInputFocus,
   showClipboardToast,
+  clipboardText,
   onClipboardScan,
   onScenarioPress,
   onSearch,
@@ -40,7 +44,17 @@ export function HomeScreen({
         <View style={styles.logoBox}>
           <MaterialCommunityIcons name="shield" size={32} color="#fff" />
         </View>
-        <Text style={styles.mainTitle}>SafeLens</Text>
+        <MaskedView
+          maskElement={<Text style={styles.appName}>PhishingRod</Text>}
+        >
+          <LinearGradient
+            colors={['#4F46E5', '#7C3AED', '#EC4899']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={[styles.appName, { opacity: 0 }]}>PhishingRod</Text>
+          </LinearGradient>
+        </MaskedView>
         <Text style={styles.tagline}>AI opens it first, keeping your phone safe.</Text>
       </View>
 
@@ -100,7 +114,7 @@ export function HomeScreen({
           </View>
           <View style={styles.toastContent}>
             <Text style={styles.toastLabel}>Clipboard Link Detected</Text>
-            <Text style={styles.toastUrl}>bit.ly/prize-claim</Text>
+            <Text style={styles.toastUrl} numberOfLines={1}>{clipboardText}</Text>
           </View>
           <TouchableOpacity 
             style={styles.toastButton}
