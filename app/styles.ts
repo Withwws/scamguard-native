@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     paddingTop: 20, 
     paddingBottom: 40,
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   
   headerSection: { alignItems: 'center', marginBottom: 32 },

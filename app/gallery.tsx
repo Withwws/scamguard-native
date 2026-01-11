@@ -23,6 +23,15 @@ export default function GalleryScreen() {
   }, [openedOnce]);
 
   const pickImage = async () => {
+    // Request permissions first
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to access your gallery!');
+      router.back();
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,

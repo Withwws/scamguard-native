@@ -87,7 +87,8 @@ export default function SafeLensScreen() {
       setLogs([]);
       console.log("🚀")
       
-      const response = await fetch('http://localhost:3000/analyze', {
+      // const response = await fetch('http://localhost:3000/analyze', {
+      const response = await fetch('https://ai-phishing-url-production.up.railway.app/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
